@@ -1,15 +1,9 @@
-import { findbyusername, findbyid, createuser } from "../Models/usermodel.js";
+import { findbyusername, createuser, findbyid } from "../Models/usermodel.js";
+import { generateAccessToken } from "../utils/jwt.js";
 import { hashPassword, verifyPassword } from "../utils/password.js";
-import { createSession, deleteSession } from "../utils/sessionStore.js";
+import { consumeRefresh, revokeRefresh, saveRefresh } from "../utils/refreshStore.js";
 
 
-// each option is due to some security reason
-const COOKIE_OPTIONS = {
-  httpOnly: true,
-  sameSite: "lax",
-  secure: false,            // set true in production (HTTPS)
-  maxAge: 60 * 60 * 1000,   // match the session TTL
-};
 
 export async function registeruser( req , res){
     let username= req.body.username;
@@ -41,15 +35,28 @@ export async function loginuser (req, res){
       return res.status(401).json({ msg: "Invalid credentials" });
     }
 
-    const sessionId = createSession(u.id);
-    res.cookie("sid", sessionId, COOKIE_OPTIONS);
-    return res.status(200).json({ id: u.id, username: u.username });
+    const accessToken=generateAccessToken(u.id);
+    const refreshToken= saveRefresh(u.id);
+    return res.status(200).json({msg:"Login successfull", id: u.id, username: u.username , accessToken,refreshToken, tokenType:"Bearer"});
     
 }
-export function logoutuser(req, res){
-    const sid= req.cookies?.sid;
-    if(sid) deleteSession(sid);
 
-    res.clearCookie("sid", { httpOnly: true, sameSite: "lax", secure: false });
+export function logoutuser(req, res){
+    // delete refresh token when impplementing
+    revokeRefresh(req.body.refreshToken);
     return res.status(200).json({ msg: "Logged out" });
+}
+
+export function refreshhandler(req, res){
+    const {refreshToken}= req.body;
+    const userId= consumeRefresh(refreshToken);
+    if (!userId) return res.status(401).json({ msg: "Login again" });
+    const user= findbyid(userId);
+
+    if(!user){return res.status(401).json({msg : "Login Again"})};
+    const newAccess= generateAccessToken(user.id);
+    const newRefresh= saveRefresh(user.id);
+
+    return res.status(200).json({accessToken:newAccess, refreshToken: newRefresh, tokenType: "Bearer"});
+
 }

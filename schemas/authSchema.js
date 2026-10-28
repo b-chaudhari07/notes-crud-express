@@ -21,3 +21,11 @@ export const loginSchema = z.object({
   username: z.string().trim().toLowerCase().min(1, "Username is required"),
   password: z.string().min(1, "Password is required").max(72),
 });
+
+// schemas/authSchemas.js
+export const refreshSchema = z.object({
+  refreshToken: z
+    .string("Refresh token is required")
+    .min(1, "Refresh token is required")
+    .max(256, "Invalid refresh token"),
+});

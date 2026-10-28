@@ -9,9 +9,11 @@ import {
 import { authcheck, requireAuth } from "../middleware/middleware.js";
 import { validate } from "../middleware/validate.js";
 import { createNoteSchema, idParamSchema, updateNoteSchema } from "../schemas/notesSchema.js";
+import { verifyjwt } from "../middleware/requirejwt.js";
+
 
 const app = Router();
-app.use(requireAuth);
+app.use(verifyjwt);
 
 app.get("/", getallnotes);
 app.get("/:id",validate(idParamSchema), getnotebyid);
