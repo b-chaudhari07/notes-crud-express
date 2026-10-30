@@ -1,17 +1,25 @@
-import fs, { readFileSync, writeFileSync } from "fs";
-export let notes;
+import mongoose from "mongoose";
 
-try {
-    notes = JSON.parse(readFileSync("notes.json"));
-} catch (error) {
-    notes=[];
-}
+const notesSchema= new mongoose.Schema(
+    {
+        title:{
+            type: String,
+            required: true,
+            trim: true
+        },
+        content:{
+            type: String,
+        },
+        userId:{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            required: true
+        }
+    },
+    {
+        timestamps: true
+    }
+)
 
-export function savenote(){
-    writeFileSync("notes.json", JSON.stringify(notes));
-}
-
-export function getnextid(){
-    if(notes.length==0) return 1;
-    return Math.max(...notes.map(n=> n.id)) +1;
-}
+const Note= mongoose.model("Note", notesSchema);
+export default Note;

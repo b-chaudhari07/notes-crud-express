@@ -1,36 +1,12 @@
-import fs, { readFileSync, writeFileSync } from "fs";
-import crypto from "crypto";
-let users = [];
+import mongoose from "mongoose";
 
-try {
-  users = JSON.parse(readFileSync("users.json", "utf8"));
-} catch (e) {
-  if (e.code === "ENOENT") users = [];
-  else throw e;
-}
+const userSchema = new mongoose.Schema(
+  {
+    username: { type: String, required: true,trim: true, unique: true, lowercase: true },
+    passwordHash: { type: String, required: true },
+  },
+  { timestamps: true },
+);
 
-function saveuser() {
-  writeFileSync("users.json", JSON.stringify(users));
-}
-
-export function findbyusername(name) {
-    const n= name.toLowerCase().trim();
-  return users.find((u) => u.username === n);
-}
-
-export function findbyid(userid) {
-  return users.find((u) => u.id === userid);
-}
-
-export function createuser({ username, passwordHash }) {
-  let user = {
-    id: crypto.randomUUID(),
-    username: username.toLowerCase().trim(),
-    passwordHash,
-    createdAt: new Date().toISOString(),
-  };
-
-  users.push(user);
-  saveuser();
-  return user;
-}
+const User= mongoose.model("User", userSchema);
+export default User;
