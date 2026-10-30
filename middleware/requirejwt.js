@@ -1,7 +1,7 @@
-import { findbyid } from "../Models/usermodel.js";
+import User from "../Models/usermodel.js";
 import { verifyAccessToken } from "../utils/jwt.js";
 
-export function verifyjwt(req, res, next){
+export async function verifyjwt(req, res, next){
     const header= req.headers.authorization;
 
 
@@ -13,9 +13,9 @@ export function verifyjwt(req, res, next){
     const payload= verifyAccessToken(token);
     
     if(!payload) {return res.status(401).json({msg:"Authentication failed"});}
-    const user= findbyid(payload.sub);
+    const user=await User.findById(payload.sub);
 
     if(!user) {return res.status(401).json({"msg": "Authentication failed"});   }
     req.user= user;
     next();
-}
+}  

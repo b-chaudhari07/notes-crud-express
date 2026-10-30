@@ -1,6 +1,6 @@
 import crypto from "crypto";
+import RefreshToken from "../Models/refreshTokenModel.js";
 
-const store = new Map(); // hash(token) → { userId, expiresAt }
 const REFRESH_TTL = 7 * 24 * 60 * 60 * 1000;
 
 function hash(raw) {
@@ -8,24 +8,24 @@ function hash(raw) {
   return crypto.createHash("sha256").update(raw).digest("hex");
 }
 
-export function saveRefresh(userId) {
+export async function saveRefresh(userId) {
   /* returns raw token */
   const raw = crypto.randomBytes(48).toString("hex");
   const hashed= hash(raw);
-  store.set(hashed , {userId, expiresAt: Date.now()+ REFRESH_TTL});
+  const refreshToken= await RefreshToken.create({tokenHash: hashed, userId:userId, expiresAt: new Date( Date.now()+ REFRESH_TTL )})
   return raw;
 }
-export function consumeRefresh(raw) {
-  /* returns userId or undefined, deletes entry */
-  const entry= store.get(hash(raw));
-  if(!entry) return undefined;
 
-  store.delete(hash(raw));
-  if(entry.expiresAt< Date.now()) return undefined;
-  return entry.userId;
+export async function consumeRefresh(raw) {
+  /* returns userId or undefined, deletes entry */
+  const hashed= hash(raw);
+  const refreshToken = await RefreshToken.findOneAndDelete({tokenHash: hashed});
+  if(!refreshToken) return undefined;
+  if(refreshToken.expiresAt < Date.now()) return undefined;
+  return refreshToken.userId.toString();
 }
 
-export function revokeRefresh(raw) {
+export async function revokeRefresh(raw) {
   /* deletes entry */
-  store.delete(hash(raw));
+  await RefreshToken.deleteOne({tokenHash: hash(raw) });
 }

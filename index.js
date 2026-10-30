@@ -1,10 +1,11 @@
-import { configDotenv } from "dotenv";
+import "dotenv/config"
 import express from "express";
 import authRouter from "./routes/authRoutes.js";
 import notesRouter from "./routes/notesRoutes.js";
 import { logger, globalErrorHandler } from "./middleware/middleware.js";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
+import { connectDb } from "./config/db.js";
 
 const app = express();
 
@@ -18,6 +19,7 @@ app.use("/notes", notesRouter);
 app.use((req, res) => res.status(404).json({ msg: "Route not found" }));
 app.use(globalErrorHandler);
 
+await connectDb();
 let PORT = 3000;
 app.listen(PORT, () => {
   console.log(`Server is listening on ${PORT}`);

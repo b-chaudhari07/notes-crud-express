@@ -6,7 +6,6 @@ import {
   updatenote,
   deletenote,
 } from "../Controllers/notesController.js";
-import { authcheck, requireAuth } from "../middleware/middleware.js";
 import { validate } from "../middleware/validate.js";
 import { createNoteSchema, idParamSchema, updateNoteSchema } from "../schemas/notesSchema.js";
 import { verifyjwt } from "../middleware/requirejwt.js";
